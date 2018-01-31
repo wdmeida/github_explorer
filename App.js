@@ -1,57 +1,75 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- * @flow
- */
-
 import React, { Component } from 'react';
+
 import {
-  Platform,
-  StyleSheet,
+  Container,
+  Content,
+  Header,
+  Body,
+  Title,
+  Form,
+  Item,
+  Input,
+  Icon,
+  Spinner,
+  Button,
   Text,
-  View
-} from 'react-native';
+} from 'native-base';
 
-const instructions = Platform.select({
-  ios: 'Press Cmd+R to reload,\n' +
-    'Cmd+D or shake for dev menu',
-  android: 'Double tap R on your keyboard to reload,\n' +
-    'Shake or press menu button for dev menu',
-});
+import RepoList from './RepoList';
 
-export default class App extends Component<{}> {
+export default class App extends Component {
+  state = {
+    search: '',
+    repositories: [],
+    loading: false,
+  };
+
+  fetchRepositories = async () => {
+    if (this.state.search.length > 0) {
+      this.setState({ loading: true });
+
+      const response = await fetch(`https://api.github.com/search/repositories?q=${this.state.search}`);
+      const repositories = await response.json();
+
+      this.setState({
+        repositories: repositories.items,
+        loading: false,
+      });
+    }
+  };
+
   render() {
     return (
-      <View style={styles.container}>
-        <Text style={styles.welcome}>
-          Welcome to React Native!
-        </Text>
-        <Text style={styles.instructions}>
-          To get started, edit App.js
-        </Text>
-        <Text style={styles.instructions}>
-          {instructions}
-        </Text>
-      </View>
+      <Container>
+        <Header>
+          <Body>
+            <Title>Github Explorer</Title>
+          </Body>
+        </Header>
+        <Content padder>
+          <Form>
+            <Item last>
+              <Icon active name="search" />
+              <Input
+                placeholder="Buscar palavra chave"
+                value={this.state.search}
+                onChangeText={text => this.setState({ search: text })}
+              />
+            </Item>
+          </Form>
+          <Button 
+            block style={{ marginTop: 10 }} 
+            onPress={this.fetchRepositories}
+          >
+            <Text>Buscar</Text>
+          </Button>
+          {
+            this.state.loading
+            ? <Spinner color="#999" />
+            : <RepoList repositories={this.state.repositories} />
+          }
+        </Content>
+      </Container>
     );
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
-});
